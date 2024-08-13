@@ -58,6 +58,7 @@ public class MessageBoardServlet extends HttpServlet {
         try {
             int x = runner.update(sql, nickName, content, ip, LocalDateTime.now());
             out.println(x > 0 ? "留言成功" : "留言失败");
+            out.println("<br><a href='message.html'>继续留言</a>");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

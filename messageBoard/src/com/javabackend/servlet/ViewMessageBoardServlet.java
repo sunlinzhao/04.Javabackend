@@ -48,6 +48,25 @@ public class ViewMessageBoardServlet extends HttpServlet {
         BeanListHandler<Message> beanListHandler = new BeanListHandler<>(Message.class);
         try {
             List<Message> query = runner.query(sql, beanListHandler);
+            StringBuffer sb = new StringBuffer();
+            sb.append("<table width='800' border='1' align='center'>")
+                    .append("<tr><td>序号</td>")
+                    .append("<td>昵称</td>")
+                    .append("<td>留言</td>")
+                    .append("<td>IP</td>")
+                    .append("<td>时间</td></tr>");
+            int i = 1;
+            for (Message message : query) {
+                sb.append("<tr>")
+                        .append("<td>").append(i++).append("</td>")
+                        .append("<td>").append(message.getNickName()).append("</td>")
+                        .append("<td>").append(message.getContent()).append("</td>")
+                        .append("<td>").append(message.getIp()).append("</td>")
+                        .append("<td>").append(message.getMtime()).append("</td>")
+                        .append("</tr>");
+            }
+            sb.append("</table>");sb.append("<a href='message.html'>继续留言</a>");
+            out.println(sb.toString());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
