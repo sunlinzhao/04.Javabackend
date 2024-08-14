@@ -233,6 +233,251 @@ JavaWeb 后端开发技术，也就是学习 JavaEE (Enterprise Edition) 版本�
 > 2. 继承 `HttpServlet` 类，并重写 `doPost`&`doGet` 方法；
 > 3. 使用类注解，定义名称和路径 `@WebServlet(name = "ViewMessageBoardServlet", value = "/view")`
 
+## 3. Servlet API
+
+![image.png](assets/image26.png)
+
+> 继承 HttpServlet 类，通常只需要重写 doGet() 和 doPost()方法
+
+- HttpServlet 继承 GenericServlet；
+- GenericServlet 实现了 Servlet 接口，ServletConfig 接口, Serializable 接口；
+- 自定义 Servlet 继承 HttpServlet；
+
+### （1）Servlet 生命周期
+
+> Servlet 接口，有三个方法关乎 Servlet 的生命周期（从上到下是调用顺序）
+>
+> - 构造方法
+> - init
+> - service
+> - destroy
+
+![image.png](assets/image27.png)
+
+生命周期： ❤️ 
+
+- 第一步：容器加载 Servlet；
+- 第二步: 调用 Servlet 的无参构造方法，实例化；
+- 第三步: 调用 init() 方法，完成初始化操作 (在servlet生命周期中，只执行一次)；
+- 第四步: 调用 service() 方法，处理浏览端发送的请求，(HttpServlet中，可以调用 doGet 或 doPost)；
+- 第五步: 调用 destroy() 方法，销毁线程；
+
+### （2）Servlet 执行过程
+
+> Servet 放在容器中(Tomcat)执行的，用户编写好程序后，部署在容器中，就可以了
+
+![image.png](assets/image28.png)
+
+1. 浏览器向服务器发送请求，带着访问的 url 地址(即访问哪一个Servlet，即相应的路径);
+2. 服务器处理部分接收，根据 url 找到对应的 Servet，产生两个对象: 请求和响应;
+3. 创建一个线程，由访线程去访问对应的 Servlet;
+4. 调用 Servlet 中的 doGet 或者是 doPost 方法，去完成用户的请求;
+5. 将处理结果返回给服务器;
+6. 服务器将响应返回给浏览器端;
+7. 线程被销毁或放在线程池中;
+
+### （3）Servlet 是线程非安全的
+
+> Servlet 在默认情况下是线程不安全的。这是因为 Servlet 容器（如Tomcat）为了提高性能，通常会对 Servlet 实例进行重用，并采用多线程的方式处理并发的 HTTP 请求。这意味着同一个 Servlet 实例的方法可能会被多个线程同时调用。 ❤️
+>
+> - 默认每个 Servlet 只创建一个实例；
+> - 多线程处理用户 Http 请求；
+> - 同一个 Servlet 实例的方法可能会被多个线程同时调用；
+
+## 4. Http 协议
+
+- Http 是基于 TCP/IP 协议之上的应用层协议；
+- 使用 请求-响应 模式；
+- 请求从客户端浏览器发出，由服务器端响应该请求，并返回给浏览器端；
+- 无状态: 自身不对请求和响应之间的通信状态进行保存；
+- 无连接: 限制每次连接只处理一个请求，服务器处理完浏览器的请求，并收到浏览器应答后，就断开连接；
+
+
+## 5. 酒店管理系统（案例）
+
+### （1）酒店房间类型
+
+#### a. 数据库表结构
+
+![image.png](assets/image30.png)
+
+#### b. 项目搭建目录
+
+![image.png](assets/image29.png)
+
+![image.png](assets/image31.png)
+
+
+# 二、JSP
+
+> - Java Server Page，运行在服务器端的页面;
+> - Java + html 代码；
+> - java代码全部都放在<% java 代码 %>中间;
+
+例如：
+
+```html
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <table class="table table-striped table-bordered table-hover">
+        <% for (int i = 0; i < 10; i++) {%>
+            <tr>
+            <td>AA</td>
+        </tr>
+        <%}%>
+    </table>
+</div>
+</body>
+</html>
+```
+
+## 1. 请求转发和重定向
+
+> 如何从 Servlet 跳转到 JSP ？方法是”请求转发和重定向“
+
+### （1）请求转发 - 服务器端行为
+
+一个 web 资源收到客户端浏览器请求后，通知服务器去调用另外一个 web 资源来进行处理，服务器端行为
+
+- 工作原理
+
+![image.png](assets/image33.png)
+
+- RequestDispatcher 接口
+  - 封装由路径所标识的web资源;
+  - getRequestDispatcher 的方法：
+    - HttpServletRequest 调用 getRequestDispatcher(String path): 可以是绝对路径，也可以是相对路径;
+    - ServletContext 调用 getRequestDispatcher(String path): 是绝对路径；
+  - forward(req,resp): 将请求转发给另一个 web 资源;
+  - include(req,resp): 将其他 web 资源作为响应内容包含进来;
+- 请求转发的特性： ❤️
+  - 请求转发不支持跨域访问，只能跳转到当前应用中的资源;
+  - 请求转发，浏览器上的 URL 地址不改变，浏览器不知道服务器内部发生了请求转发，也不知道转发的次数;
+  - 参与请求转发的 web 资源之间，共享同一个 request 和 response 对象;
+  - 可以在请求范围内，使用 setAttribute(名,值),getAttribute(名)，来传递数据;
+  - 一次请求，一次响应；
+
+```java
+@WebServlet(name = "S2", value = "/S2")
+public class S2 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("GBK");
+        resp.setCharacterEncoding("GBK");
+        PrintWriter writer = resp.getWriter();
+        writer.println("这里是S2的 servlet");
+        String k = (String) req.getAttribute("k");
+        writer.println(k);
+
+    }
+}
+```
+
+```java
+@WebServlet(name = "S1", value = "/S1")
+public class S1 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("GBK");
+        resp.setCharacterEncoding("GBK");
+        PrintWriter writer = resp.getWriter();
+        writer.println("这里是S1的 servlet");
+        // 在请求范围内，放一个名值对
+        req.setAttribute("k", "v");
+        // 封装转发对象
+        RequestDispatcher rd = req.getRequestDispatcher("S2");
+        // 调用转发
+        rd.forward(req, resp);
+//        rd.include(req, resp);
+    }
+}
+```
+
+### （2）重定向 - 客户端行为
+
+当浏览器向服务器发送请求时，通知浏览器重新定向到另一个 web 资源，客户端行为
+
+- 响应码: 200 表示成功，302 表求重定向，404 资源不可访问，500 服务器内部错误(程序错误)
+- 工作原理
+
+![image.png](assets/image34.png)
+
+- 调用 resp.sendRedirect(String path);
+  ```java
+          // 以前的写法
+  //        resp.setStatus(302);
+  //        resp.setHeader("location", "要跳转的资源地址");
+          // 现在的写法
+          resp.sendRedirect("要跳转的资源地址");
+  ```
+- 特性： ❤️
+  - 浏览器地址栏会发生变化，变成第二次请求地址；
+  - 两次请求和响应，不能再请求范围内传递数据；
+  - 可以跨域，可以重定向任何网址；
+
+```java
+@WebServlet(name = "S3", value = "/S3")
+public class S3 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("utf-8");
+        resp.setCharacterEncoding("utf-8");
+        resp.setContentType("text/html");
+        PrintWriter writer = resp.getWriter();
+        writer.println("这里是S3的 servlet");
+        req.setAttribute("K1", "K1");
+        // 以前的写法
+//        resp.setStatus(302);
+//        resp.setHeader("location", "S4");
+        // 现在的写法
+        resp.sendRedirect("S4");
+//        resp.sendRedirect("http://www.baidu.com");
+    }
+}
+```
+
+```java
+@WebServlet(name = "S4", value = "/S4")
+public class S4 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("utf-8");
+        resp.setCharacterEncoding("utf-8");
+        resp.setContentType("text/html");
+        PrintWriter writer = resp.getWriter();
+        writer.println("这里是S4的 servlet");
+        String k1 = req.getAttribute("K1").toString();
+        writer.println(k1);
+    }
+}
+```
+
+
+### （3）总结 ❤️ 
+
+> 无论是请求转发还是重定向，跳转后，原网页的操作会继续执行，直到结束（可以调用 return; 停止）
+
+- 区别：
+  - 请求转发是一次请求，重定向是两次请求；
+  - 请求转发浏览器地址不变，重定向浏览器地址改变；
+  - 请求转发由于是一次请求，所以效率更高；
+  - 请求转发可以在请求范围内传递数据，重定向不可以在请求范围内传递数据；
+  - 请求转发不支持跨域，重定向支持跨域；
+  - 请求转发是属于服务器端行为，重定向是属于客户端行为；
+
+## 2. 酒店管理系统（优化）
+
+
+
+
+
+
 
 
 

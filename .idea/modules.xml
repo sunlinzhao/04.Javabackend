@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/HotelSystem/HotelSystem.iml" filepath="$PROJECT_DIR$/HotelSystem/HotelSystem.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/Javabackend.iml" filepath="$PROJECT_DIR$/.idea/Javabackend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ServletTest/ServletTest.iml" filepath="$PROJECT_DIR$/ServletTest/ServletTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/messageBoard/messageBoard.iml" filepath="$PROJECT_DIR$/messageBoard/messageBoard.iml" />
     </modules>
   </component>
