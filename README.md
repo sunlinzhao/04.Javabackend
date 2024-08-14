@@ -254,7 +254,7 @@ JavaWeb 后端开发技术，也就是学习 JavaEE (Enterprise Edition) 版本�
 
 ![image.png](assets/image27.png)
 
-生命周期： ❤️ 
+生命周期： ❤️
 
 - 第一步：容器加载 Servlet；
 - 第二步: 调用 Servlet 的无参构造方法，实例化；
@@ -292,7 +292,6 @@ JavaWeb 后端开发技术，也就是学习 JavaEE (Enterprise Edition) 版本�
 - 无状态: 自身不对请求和响应之间的通信状态进行保存；
 - 无连接: 限制每次连接只处理一个请求，服务器处理完浏览器的请求，并收到浏览器应答后，就断开连接；
 
-
 ## 5. 酒店管理系统（案例）
 
 ### （1）酒店房间类型
@@ -306,7 +305,6 @@ JavaWeb 后端开发技术，也就是学习 JavaEE (Enterprise Edition) 版本�
 ![image.png](assets/image29.png)
 
 ![image.png](assets/image31.png)
-
 
 # 二、JSP
 
@@ -458,8 +456,7 @@ public class S4 extends HttpServlet {
 }
 ```
 
-
-### （3）总结 ❤️ 
+### （3）总结 ❤️
 
 > 无论是请求转发还是重定向，跳转后，原网页的操作会继续执行，直到结束（可以调用 return; 停止）
 
@@ -470,21 +467,3 @@ public class S4 extends HttpServlet {
   - 请求转发可以在请求范围内传递数据，重定向不可以在请求范围内传递数据；
   - 请求转发不支持跨域，重定向支持跨域；
   - 请求转发是属于服务器端行为，重定向是属于客户端行为；
-
-## 2. 酒店管理系统（优化）
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-2222
