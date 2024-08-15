@@ -104,7 +104,6 @@ public class AdminServlet extends BaseServlet{
             service.updateLogin(admin);
             return "index.jsp";
         }
-
     }
     public String selectList(HttpServletRequest request, HttpServletResponse response){
         List<Admin> list = service.list();

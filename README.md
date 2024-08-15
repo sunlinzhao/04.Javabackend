@@ -311,6 +311,7 @@ JavaWeb 后端开发技术，也就是学习 JavaEE (Enterprise Edition) 版本�
 > - Java Server Page，运行在服务器端的页面;
 > - Java + html 代码；
 > - java代码全部都放在<% java 代码 %>中间;
+> - tomcat 中的 JSP会转译成Serlet，然后再编译成.class文件去运行；
 
 例如：
 
@@ -467,3 +468,536 @@ public class S4 extends HttpServlet {
   - 请求转发可以在请求范围内传递数据，重定向不可以在请求范围内传递数据；
   - 请求转发不支持跨域，重定向支持跨域；
   - 请求转发是属于服务器端行为，重定向是属于客户端行为；
+
+## 2. JSP 表达式
+
+作用：
+
+> 将动态信息显示在页面上，以字符串方式，返回给浏览器端
+
+语法格式：
+
+> <%=变量或者表达式%>，注意：不能使用分号放在后面；
+
+# 三、会话跟踪技术
+
+> - 会话：在 web 应用中，浏览器和服务器在一段时间内发送请求和响应的连续交互的全过程叫做一次会话；
+> - 会话跟踪：对同一个用户跟服务器的连续请求和接收响应的监视过程；
+>   - 作用：浏览器和服务器是以http协议进行通信，http协议是无状态协议，本身是不会跟踪用户状态的。在类似于购物网站、电子邮箱，多次请求的操作，无法判断是否是同一个用户在执行，因此，需要使用会话跟踪技术。
+
+## 1.四种会话跟踪技术 ❤️
+
+### （1）Cookie
+
+客户端浏览器
+
+> Cookie 是指使用 Cookie 对象实现跟踪用户会话的技术，在客户端浏览器保持会话跟踪的解决方式
+
+- Cookie 以键值对形式保存信息，存储在客户端浏览器；
+- 当用户第一次向服务器发送请求时，服务器会将 Cookie 的信息随着响应（请求头）发送给客户端浏览器；
+- 客户端浏览器会将信息保存起来，下一次发送请求时，会携带 Cookie 中的信息，作为用户的唯一标识，被服务器跟踪识别；
+- Cookie 会限制不超过4KB，并且不能跨浏览器使用； 👀️
+
+> 用途：跟踪用户状态，保存一些业务信息，记录用户登录状态；
+>
+> 生命周期：Cookie 默认生命周期是浏览器关闭；
+
+案例代码：
+
+```java
+Cookie namecookie=new cookie("namecookie",admin.getName());
+Cookie pwdcookie=new cookie("pwdcookie",pwd);
+//设置cookie存活时间
+namecookie.setMaxAge(60*60*24*10);
+pwdcookie.setMaxAge(60*60*24*10);
+//将cookie放在响应中，通过响应返回到浏览器端r
+response.addcookie(namecookie);
+response.addcookie(pwdcookie);
+```
+
+```java
+// 查看 Cookie
+Cookie[] cookies=request.getcookies();
+if(cookies!=null)
+    for(Cookie cookie : cookies){
+         System.out.printin(cookie.getName()+"\t"+cookie.getValue());
+    }
+```
+
+### （2）Session
+
+服务器端
+
+> Session 是指使用 HttpSession 对象，实现会话跟踪技术,是一种在服务器端保持会话跟踪的方案。
+
+⭐️ 本质也是采用客户端会话管理技术，要依赖 Cookie 技术，在客户端保存一个特殊标识，共享的数据保存在服务器端的内存中。
+
+- HttpSession 是由 JavaWeb API提供的接口，用来做会话跟踪的，保存在服务器端；
+- 当用户第一次访问服务器(Servlet或jsp动态资源时)，创建 HttpSession 对象，为对象分配一个唯一的 SessionID，将 SessionId 作为Cookie (url重写) 发送到浏览器端，浏览器会保存这个 Cookie 的数据；
+- 当浏览器端再次发送请求时，Cookie会一起发送过来，服务器端获取 SessionID，根据 SessionID 找到对应的 HttpSession 对象，跟踪客户端的状态；
+
+> session失效情况：🚀️
+>
+> 1. 关闭浏览器
+> 2. 将工程从服务器退出
+> 3. 超过最大不活动时间, 默认最大不活动时间 1800秒(30分钟)
+> 4. 调用方法，让当前 session 失效
+
+session 获取：
+
+```java
+// 以下两行代码功能相同，获取session，如果没有，就创建一个新的，如果有，则直接返回这个session
+Httpsession session=req.getSession();
+Httpsession session=req.getSession(true);
+// 获取 session，如果有，则直接返回这个 session，如果没有，则返回 null
+Httpsession session=req.getSession(false);
+```
+
+获取 sessionId：
+
+```java
+session.getId(); //获取sessionId
+session.isNew(); //判断session是否是新的
+```
+
+session 失效的情况：
+
+```java
+// session失效
+// 1. 关闭浏览器
+// 2. 将工程从服务器退出
+// 3. 超过最大不活动时间 默认最大不活动时间 1800秒(30分钟)
+// 4. 调用方法，让当前session失效
+// 让当前session失效
+session.invalidate();
+```
+
+设置 session 对象最大不活动时间：
+
+```java
+//设置session最大不活动时间，以秒钟为单位
+session.setMaxInactiveInterval(5);
+//获取session最大不活动时间
+session.getMaxInactiveInterval();
+```
+
+session 属性数据：
+
+```java
+session.setAttribute("名","值(object)");
+session.getAttribute("名");
+session.removeAttribute("名"); //移除属性数据
+```
+
+### （3）URL 重写处理 👀️
+
+> 也是会话跟踪的一种技术，主要用于浏览器端阻止所有的 cookie，不能在浏览器端去保存 session 的 id，没有办法跟踪用户。
+
+可以将 jsessionid 缀到 url 地址后面，每次访问服务器，都会带着这个 sessionid 的数据:
+
+```java
+response.encodeUrl("要重写的ur1地址")
+```
+
+![image.png](assets/image35.png)
+
+
+
+### （4）隐藏表单域技术
+
+隐藏表单可以将 sessionid 从url中隐藏，但是查看网页源代码时仍然可以看到：
+
+```html
+<form>
+<input type="hidden" name="jsessionid'Value="ABEC7EFE03A26EC012DD83A8BD685F1C"><input type="submit" value="提交">
+</form>
+```
+
+是使用 html 中的 input type="hidden" 控件，在网页表单中隐藏相关客户端信息，在提交表单时，将信息一并发送给服务器端，服务器通过读取 jsessionid，去跟踪用户状态。
+
+# 四、过滤器
+
+## 1. 配置欢迎页
+
+web.xml(部署描述符文件)文件中进行修改，可以有多个，按由上到下顺序去执行，先找到哪个页面就将哪个页面当成欢迎页面显示；
+
+```xml
+<welcome-file-list>
+    <welcome-file>login_ajax.jsp</welcome-file>
+    <welcome-file>login.jsp</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+</welcome-file-list>
+```
+
+## 2. 过滤器 ❤️
+
+> 属于web应用的组件，具有拦截客户端浏览器请求的功能，针对这些请求数据做处理，拦截服务器端的响应数据，做处理。
+
+- 过滤器可以有多个，形成一行过滤链;
+- 过滤器使用场景：权限管理、编码、日志、性能监控
+
+使用：
+
+- 要求必须实现 javax.servlet.Filter 接口，重写 doFilter() 方法；
+- 配置
+
+  - xml配置：
+
+    ```xml
+    <filter>
+        <filter-name>encoding</filter-name>
+        <filter-class>com.coder.util.EncodingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>encoding</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    ```
+  - 或注解配置
+
+    ```java
+    @WebFilter("/*")
+    public class EncodingFilter implements Filter {
+    ```
+  - 初始化配置：
+
+    ```java
+    @WebFilter(value ="/*", initParams ={@WebInitParam(name = "encode",value = "gbk")})
+    public class EncodingFilter implements Filter {
+    ```
+- 使用：编码过滤器
+
+  ```java
+  @WebFilter(value = "/*",
+          initParams = {@WebInitParam(name = "encode",value = "utf-8")})
+  public class EncodingFilter implements Filter {
+      private String encode;
+      @Override
+      public void init(FilterConfig filterConfig) throws ServletException {
+          encode = filterConfig.getInitParameter("encode");
+      }
+
+      @Override
+      public void doFilter(ServletRequest servletRequest,
+                           ServletResponse servletResponse,
+                           FilterChain filterChain) throws IOException, ServletException {
+          servletRequest.setCharacterEncoding(encode);
+          servletResponse.setCharacterEncoding(encode);
+          //表示当前过滤节点结束，向下一个节点跳转
+          filterChain.doFilter(servletRequest,servletResponse);
+          //System.out.println("run encoding filter");
+      }
+  }
+  ```
+
+# 五、EL 表达式和 JSTL
+
+## 1. EL 表达式
+
+- EL 表达式，Expression Language，表达式语言；
+- 主要作用，在 jsp 页面上获取数据，擅长查找对象，配合 JSTL，使JSP页面摆脱大量的Java代码片；
+- 语法格式 ${表达式内容}
+
+### （1）使用
+
+EL表达式，作用域范围：
+
+![image.png](assets/image36.png)
+
+> 如果不写作用范围，会由小到大进行查找，找到就返回，找不到就不显示
+>
+> 没有空指针异常，没有数组下标越界问题
+
+jsp 注释：
+
+```jsp
+<!--注释 查看源代码会显示-->
+<%--注释 查看源代码也不显示--%>
+```
+
+### （2）运算符
+
+```html
+    ${"1"=="1"}  ${"1" eq "2"}
+    ${1!=2}  ${1 ne 2}
+    ${1<2}  ${1 lt 2}
+    ${1<=2}  ${1 le 2}
+    ${1>2}  ${1 gt 2}
+    ${1>=2}  ${1 ge 2}
+    ${5>3 && 3>2}  ${5>3 and 3>2}
+    ${5>3 || 3>2}  ${5>3 or 3>2}
+    ${!5>3}   ${not 5>3}
+    empty 判断对象是否为null，判断字符串是否是空串或者 null 值，判断集合是否为空 ${empty list}
+```
+
+### （3）隐式对象
+
+![image.png](assets/image38.png)
+
+![image.png](assets/image39.png)
+
+## 2. JSTL
+
+> JavaServerPages Standard Tag Library （JSP标准标签库)
+
+JSTL 提供了五大类标签库
+
+1. 核心标签库 prefix="c"
+2. 国际化(i18n)标签库 prefix="fmt"
+3. sql标签库 prefix="sql"
+4. xml标签库 prefix="xml"
+5. 函数标签库 prefix="fn"
+
+### （1）核心标签库
+
+步骤1: 需要jar包: jstl standard
+
+步骤2: 在jsp上，使用taglib指令，导入jstl
+
+> <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jst1/core"%>
+
+![image.png](assets/image40.png)
+
+![image.png](assets/image42.png)
+
+![image.png](assets/image41.png)
+
+> 属性的说明：
+>
+> items: 集合，用el表达式处理
+> var: 每次循环取出的临时变量名
+> varStatus: 循环状态
+> index: 索引，从0开始
+> count: 统计循环次数，从1开始
+> first: boolean 判断是否是第一个元素
+> last: boolean 判断是否是最后一个元素
+> begin: 循环的初值
+> end: 循环的终值
+> step: 步长，循环间的数值
+
+# 六、文件上传与下载
+
+## 1. 文件上传
+
+
+- 表单
+- 必须使用 post 提交，enctype 必须是 mutipart / form-data
+
+```html
+<form action="RoomInfoservlet?flag=save" method="post" enctype="multipart/form-data">
+```
+
+- 在Servlet上添加注解 `@Multipartconfig；可以在注解上配置上传路径或者文件上传大小限制；或者在代码中手动处理也可以
+- 执行上传处理
+
+  ```java
+       //获取当前工程真实路径
+          ServletContext context = this.getServletContext();
+          String realPath = context.getRealPath("/");
+          String path = realPath + "upload";
+          File dir = new File(path);
+          dir.mkdirs();//创建目录
+          //完成上传处理
+          Part part = request.getPart("pic");
+          String fileName = part.getSubmittedFileName();
+          String extName = fileName.substring(fileName.lastIndexOf("."));
+          String prefix = String.valueOf(System.currentTimeMillis());
+          fileName = prefix + extName;
+          File file = new File(dir, fileName);
+          //上传处理
+          part.write(file.getAbsolutePath());
+          //UUID.randomUUID().toString().replace("-","");
+          info.setPic("/upload/" + fileName);
+          service.insert(info);
+  ```
+
+### （1）ServletConfig 配置对象
+
+- ServletConfig 是 Servlet 配置参数对象；
+- 在 Servlet 的规范中，每一个 Servlet 都可以提供一些初始化参数配置，每个 Servlet 都有一个自己的 ServletConfig 对象；
+- 主要作用是读取 Servlet 初始化参数处理；
+
+#### a. XML 中配置 Servlet 初始化参数
+
+```xml
+<servlet>
+        <servlet-name>roomInfo</servlet-name>
+        <servlet-class>com.coder.servlet.RoomInfoServlet</servlet-class>
+        <init-param>
+            <param-name>status</param-name>
+            <param-value>1:空,2:有客,3:空脏,4:备用</param-value>
+        </init-param>
+        可以配置多个
+         <init-param>
+            <param-name>status</param-name>
+            <param-value>1:空,2:有客,3:空脏,4:备用</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>roomInfo</servlet-name>
+        <url-pattern>/RoomInfoServlet</url-pattern>
+    </servlet-mapping>
+```
+
+
+#### b. 注解配置 Servlet 初始化参数
+
+```java
+@WebServlet(name = "RoomInfoServlet",value = "/RoomInfoServlet", initParams = {
+        @WebInitParam(name = "status", value = "1:空,2:有客,3:空脏"),
+        @WebInitParam(name="email",value = "126.com")})
+```
+
+
+#### c. ServletConfig API
+
+- 常见方法
+
+```java
+        ServletConfig config = this.getServletConfig();
+        //1:空,2:有客,3:空脏,4:备用
+        //获取初始化参数
+        String status = config.getInitParameter("status");
+        //获取Servlet名字
+        String servletName = config.getServletName();
+        Enumeration<String> initParameterNames = config.getInitParameterNames();
+        //对枚举类型进行循环
+        while (initParameterNames.hasMoreElements()) {
+            System.out.println(initParameterNames.nextElement());
+        }
+        // 获取 ServletContext 对象
+        ServletContext context=config.getServletContext();
+```
+
+
+### （2）ServletContext 对象
+
+Servlet 应用上下文对象，针对当前工程，所有的Servlet，只有一个 ServletContext 对象；（最大范围）
+
+> 生命周期: 应用加载开始创建，应用停止时销毁；
+
+- 获取方式
+
+```java
+        //要在ServletContext作用域范围内设置一个名值对
+        //获取ServletContext方式
+        ServletContext context;
+        context=req.getServletContext();
+        context=session.getServletContext();
+        context=this.getServletConfig().getServletContext();
+        context=this.getServletContext();
+```
+
+- 在 ServletContext 范围内赋值
+
+```java
+//赋值
+context.setAttribute("c","context");
+//取值
+context.getAttribute("c");
+//移除
+context.removeAttribute('c");
+```
+
+- 配置 ServletContext 初始化参数
+
+> web.xml，独立于所有的 servlet，单独配置
+
+```xml
+    <context-param>
+        <param-name>email</param-name>
+        <param-value>123@126.com</param-value>
+    </context-param>
+```
+
+获取参数
+
+```java
+String email = getservletcontext().getInitParameter("emai");
+```
+
+其他方法：
+
+```java
+        // 获取所有初始化参数
+        Enumeration<String> initParameterNames = context.getInitParameterNames();
+        // 获取真实路径
+        context.getRealPath("/");
+        // 获取服务器信息
+        String serverInfo = context.getServerInfo();
+        System.out.println("服务器:"+serverInfo);
+        // 获取servlet主版本号和次版本号
+        int majorVersion = context.getMajorVersion();
+        int minorVersion = context.getMinorVersion();
+        System.out.println("minorVersion = " + minorVersion);
+        System.out.println("majorVersion = " + majorVersion);
+        //获取当前工程虚拟上下文路径
+        String contextPath = context.getContextPath();
+        System.out.printin(contextPath);
+```
+
+### （3）监听器
+
+- 用来监听 Servlet 组件对象状态发生变化的组件了；
+- 可以监听的源包括: ServletRequest、HttpSession、ServletContext；
+- 当监听到事件源状态发生变化时，会有对应的响应行为；
+
+在 web.xml 文件中配置监听
+
+```xml
+    <listener>
+        <listener-class>com.coder.util.ListenerContext</listener-class>
+    </listener>
+```
+
+通过注解配置，在监听器上加注解：
+
+`@WebListener`
+
+![image.png](assets/image44.png)
+
+实际上，当浏览器关闭之后，Cookie失效了不能再通过cookie中记录的jsessionid去跟踪到当前用户，所以无法通过cookie去访问session了，但是session对象并没有马上被回收。
+
+```java
+@WebListener
+public class ListenerContext implements
+        ServletContextListener, ServletContextAttributeListener,
+        ServletRequestListener,ServletRequestAttributeListener {
+    @Override
+    public void attributeAdded(ServletContextAttributeEvent scae) {
+        //System.out.println("增加了ServletContext属性");
+        //System.out.println(scae.getName());
+    }
+
+    @Override
+    public void attributeReplaced(ServletContextAttributeEvent scae) {
+        //System.out.println("替换了ServletContext属性");
+    }
+
+    @Override
+    public void attributeRemoved(ServletContextAttributeEvent scae) {
+        //System.out.println("移除了ServletContext属性");
+
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        //System.out.println("项目启动...");
+       /* Timer timer=new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").
+                        format(LocalDateTime.now()));
+            }
+        },0,2000);*/
+    }
+}
+```
+
+
+
+
+
+
+0000000

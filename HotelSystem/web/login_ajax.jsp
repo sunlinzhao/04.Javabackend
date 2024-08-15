@@ -10,19 +10,19 @@
 
 <body>
 <%
-   /* Cookie[] cookies=request.getCookies();
-    String name="";
-    String pwd="";
-    if (cookies!=null)
-        for(Cookie cookie:cookies){
-            //System.out.println(cookie.getName()+"\t"+cookie.getValue());
-            if (cookie.getName().equals("nameCookie")){
-                name=cookie.getValue();
-            }
-            if (cookie.getName().equals("pwdCookie")){
-                pwd=cookie.getValue();
-            }
-        }*/
+//   Cookie[] cookies=request.getCookies();
+//    String name="";
+//    String pwd="";
+//    if (cookies!=null)
+//        for(Cookie cookie:cookies){
+//            //System.out.println(cookie.getName()+"\t"+cookie.getValue());
+//            if (cookie.getName().equals("nameCookie")){
+//                name=cookie.getValue();
+//            }
+//            if (cookie.getName().equals("pwdCookie")){
+//                pwd=cookie.getValue();
+//            }
+//        }
 %>
 <div class="x">
     <div class="title">用户登录</div>
