@@ -1234,12 +1234,3 @@ docBase="D:\MyProject\Java\Javabackend\out\artifacts\HotelSystem_war_exploded"/>
 
 访问路径：localhost:8888/hotel_system/RoominfoServiet?flag=selectList
 
-
-
-
-
-
-
-
-
-0000000
