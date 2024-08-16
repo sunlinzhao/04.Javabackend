@@ -601,8 +601,6 @@ response.encodeUrl("要重写的ur1地址")
 
 ![image.png](assets/image35.png)
 
-
-
 ### （4）隐藏表单域技术
 
 隐藏表单可以将 sessionid 从url中隐藏，但是查看网页源代码时仍然可以看到：
@@ -779,7 +777,6 @@ JSTL 提供了五大类标签库
 
 ## 1. 文件上传
 
-
 - 表单
 - 必须使用 post 提交，enctype 必须是 mutipart / form-data
 
@@ -839,7 +836,6 @@ JSTL 提供了五大类标签库
     </servlet-mapping>
 ```
 
-
 #### b. 注解配置 Servlet 初始化参数
 
 ```java
@@ -847,7 +843,6 @@ JSTL 提供了五大类标签库
         @WebInitParam(name = "status", value = "1:空,2:有客,3:空脏"),
         @WebInitParam(name="email",value = "126.com")})
 ```
-
 
 #### c. ServletConfig API
 
@@ -868,7 +863,6 @@ JSTL 提供了五大类标签库
         // 获取 ServletContext 对象
         ServletContext context=config.getServletContext();
 ```
-
 
 ### （2）ServletContext 对象
 
@@ -994,6 +988,254 @@ public class ListenerContext implements
     }
 }
 ```
+
+## 2. 文件下载
+
+### （1）请求头
+
+用于说明是谁在发送请求，请求来源，或者客户端浏览器型号及能力，服务器可以根据请求头能给出客户端信息。
+
+这些数据，在浏览器中看不到(除非是通过调试工具可以看到)，需要通过程序去进行读取。
+
+```java
+@WebServlet("/HeadServlet")
+public class HeadServlet extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("text/html");
+        PrintWriter out=resp.getWriter();
+        //获取所有请求头的名字，得到一个枚举类型
+        Enumeration<String> headerNames = req.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            //获取请求头名字
+            String name=headerNames.nextElement();
+            //通过请求头名字，获取值
+            out.println(name+":"+req.getHeader(name)+"<br>");
+        }
+    }
+}
+```
+
+```yaml
+host:localhost:8080
+connection:keep-alive
+cache-control:max-age=0
+sec-ch-ua:"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile:?0
+sec-ch-ua-platform:"Windows"
+upgrade-insecure-requests:1
+user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+sec-fetch-site:none
+sec-fetch-mode:navigate
+sec-fetch-user:?1
+sec-fetch-dest:document
+accept-encoding:gzip, deflate, br, zstd
+accept-language:zh-CN,zh;q=0.9
+cookie:JSESSIONID=C0F34D0D51632A4387E71982B9720751; Idea-daea4706=b8349a76-ebb4-4467-8ba4-4f0101cdad40
+```
+
+![image.png](assets/image45.png)
+
+![image.png](assets/image46.png)
+
+### （2）文件下载
+
+```java
+    public void download(HttpServletRequest request,HttpServletResponse response) throws IOException {
+        String path=request.getParameter("path");
+        String fileName=path.substring(path.lastIndexOf("/")+1);
+        String realPath=this.getServletContext().getRealPath("/");
+        String file=realPath+path;
+        //设置一下响应相关的类型
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition","attachment;filename=\""+fileName+"\"");
+        //通过IO流，实现文件下载
+        FileInputStream fis=new FileInputStream(file);
+        OutputStream os= response.getOutputStream();
+        byte[] buffer=new byte[1024];
+        int b=-1;
+        while ((b=fis.read(buffer))!=-1){
+            os.write(buffer,0,b);
+        }
+        fis.close();
+        os.close();
+    }
+```
+
+### （3）JSP 内置对象
+
+> jsp隐藏对象、内建对象，或者内置对象; 在jsp中，不需要声明，可以直接使用的对象； 9 类
+
+![image.png](assets/image47.png)
+
+> 当一个jsp通过page指令 isErrorPage=true，表明，这个jsp是专门处理异常的jsp;
+>
+> 当一个jsp通过page指令 errorPage="指定页"，表明，当前页面出现错误后跳转到指定页;
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+  <%
+    int i=10/0;
+  %>
+</body>
+</html>
+```
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" language="java"
+         isErrorPage="true" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+    异常:<%=exception%>
+</body>
+</html>
+```
+
+### （4）响应状态码
+
+> 200: 表示处理成功
+> 404: 表示访问资源丢失(浏览器端返回的问题)
+> 500: 服务器内部错误
+
+![image.png](assets/image48.png)
+
+### （5）JSP 指令
+
+jsp 三种指令：
+
+> - <%@ page%>: 定义相关的信息
+> - <%@ taglib %>: 用来导入jstl
+> - <%@ include%>: 将其他页面包含到当前页面中，最后编译成一个 servlet
+>   - 为了实现整站页面的统一风格
+
+### （6）JSP 动作
+
+```jsp
+<jsp:动作名 属性="属性值"></jsp:动作名>
+```
+
+```jsp
+<jsp:include> 包含
+<jsp:forward>: 跳转相当于request.getRequestDispatcher().forward()
+<jsp:param>: 和jstl相同，用来传递参数
+<jsp:useBean> javaBean:java可重用的组件
+```
+
+```jsp
+<jsp :forward page="forward2.jsp">
+    <jsp:param name="email" value="aaa@126.com"/>
+</jsp:forward>
+```
+
+# 七、MVC 模式 ❤️ 
+
+> - Model1: jsp + javaBean
+> - Model2: Servlet + JSP + JavaBean (MVC)
+
+1. Model （模型）
+2. View （视图）
+3. Controller (控制器)
+
+> 一种软件架构模式，做分层处理。将软件界面、业务逻辑分离，使代码具有更高的可扩展、可复用性，易于维护，降低耦合性。
+
+![image.png](assets/image49.png)
+
+
+![image.png](assets/image50.png)
+
+工作流程：
+
+1. 用户发送请求到服务器;
+2. 服务器通过 Controller 层，接收请求;
+3. 调用相关的 Model 层处理请求，并访问数据库;
+4. Model 层处理完成后，将结果返回给 Controller层;
+5. Controller 根据 Model 返回的结果，跳转到相应的 View 层;
+6. View 层渲染最终的效果响应给浏览器;
+
+优点：
+
+1. 降低代码耦合性；
+2. 利于分工合作；例如：前台美工，负责处理界面，DBA负责处理数据
+3. 利于组件复用；
+
+# 八、web.xml 配置
+
+- 配置初始化参数配置Servlet
+- 配置过滤器
+- 配置监听器 （如：用于统计在线人数）
+- 配置 ServletContext 初始化参数
+- 配置欢迎页
+- 配置错误页
+
+  ```xml
+  <error-page>
+      <error-code>404</error-code>
+      <1ocation>/404.jsp</1ocation>
+  </error-page>
+  <error-page>
+      <error-code>500</error-code>
+      <location>/500.jsp</1ocation>
+  </error-page>
+  ```
+- 配置 Session 失效时间
+
+  ```xml
+  # 20 分钟失效
+  <session-config>
+      <session-timeout>20</session-timeout>
+  </session-config>
+  ```
+
+> 如果，同时在程序中和配置文件中，都设置了最大不活动时间，则以程序设置为主
+
+# 九、Tomcat 项目部署
+
+## 1. 直接复制
+
+直接复制，将文件复制到 tomcat 服务器目录 webapps 下
+
+在：项目路径下/out/artifacts/项目名称_war_exploded/*
+
+![image.png](assets/image51.png)
+
+> 其中包括编译好的java代码.class文件 ❤️
+
+![image.png](assets/image52.png)
+
+![image.png](assets/image53.png)
+
+![image.png](assets/image54.png)
+
+> 访问路径：ip:端口/HotelSystem/资源路径...
+>
+> 如：localhost:8888/HotelSystem/RoominfoServiet?flag=selectList
+
+## 2. 在 \Tomcat 9.0\conf\Catalina\localhost 目录下，创建.xml文件
+
+![image.png](assets/image55.png)
+
+写入：
+
+```xml
+<Context path="hotel_system"
+docBase="D:\MyProject\Java\Javabackend\out\artifacts\HotelSystem_war_exploded"/>
+```
+
+> 给出编译好的项目绝对路径
+
+访问路径：localhost:8888/hotel_system/RoominfoServiet?flag=selectList
+
+
+
 
 
 
